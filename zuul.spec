@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -16,6 +16,7 @@ Source20:       sysconfig
 Patch0:         0001-Read-all-Gerrit-events-from-poll-interruption.patch
 Patch1:         0001-Keep-existing-loggers-with-fileConfig.patch
 Patch2:         0001-zuul-tmp-url-key.patch
+Patch3:         Fix-Third-party-CI-conflict.patch
 
 BuildArch:      noarch
 
@@ -188,5 +189,8 @@ exit 0
 
 
 %changelog
+* Wed Mar 15 2017 Tristan Cacqueray - 2.5.1-2
+- Add Fix-Third-party-CI-conflict.patch
+
 * Tue Mar 14 2017 Tristan Cacqueray - 2.5.1-1
 - Initial packaging
