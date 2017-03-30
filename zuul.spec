@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        2.20170310.773651a%{?dist}
+Release:        3.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -30,7 +30,7 @@ Requires:       python-ordereddict
 Requires:       python-daemon
 Requires:       python-extras
 Requires:       python2-statsd
-Requires:       python2-voluptuous
+Requires:       python-voluptuous
 Requires:       python-gear
 Requires:       python2-APScheduler
 Requires:       python-prettytable
@@ -189,6 +189,9 @@ exit 0
 
 
 %changelog
+* Thu Mar 30 2017 Tristan Cacqueray - 2.5.1-3
+- Depends on python-voluptuous from rdo
+
 * Wed Mar 15 2017 Tristan Cacqueray - 2.5.1-2
 - Add Fix-Third-party-CI-conflict.patch
 
