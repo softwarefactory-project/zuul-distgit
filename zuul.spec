@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        3.20170310.773651a%{?dist}
+Release:        4.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -44,7 +44,7 @@ BuildRequires:  python-pbr
 BuildRequires:  python-setuptools
 BuildRequires:  systemd
 # Webui reqs
-BuildRequires:  uglify-js
+BuildRequires:  python2-rjsmin
 BuildRequires:  python-pathlib
 BuildRequires:  python-enum34
 BuildRequires:  python-scss
@@ -101,8 +101,8 @@ rm requirements.txt test-requirements.txt
 %build
 PBR_VERSION=%{version} %{__python2} setup.py build
 mkdir build/web-assets
-uglifyjs -o build/web-assets/zuul.app.min.js etc/status/public_html/zuul.app.js
-uglifyjs -o build/web-assets/jquery.zuul.min.js etc/status/public_html/jquery.zuul.js
+python2 -mrjsmin < etc/status/public_html/zuul.app.js > build/web-assets/zuul.app.min.js
+python2 -mrjsmin < etc/status/public_html/jquery.zuul.js > build/web-assets/jquery.zuul.min.js
 pyscss -o build/web-assets/zuul.min.css etc/status/public_html/styles/zuul.css
 
 
@@ -189,6 +189,9 @@ exit 0
 
 
 %changelog
+* Tue Apr 18 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-4
+- Use rjsmin instead of uglify
+
 * Thu Mar 30 2017 Tristan Cacqueray - 2.5.1-3
 - Depends on python-voluptuous from rdo
 
