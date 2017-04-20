@@ -1,0 +1,110 @@
+From 0c5b1ec0513724332f666a5aa5689e43340212fc Mon Sep 17 00:00:00 2001
+From: Javier Pena <jpena@redhat.com>
+Date: Tue, 7 Mar 2017 11:31:54 +0100
+Subject: [PATCH] Find fallback branch in zuul-cloner
+
+Previously, we were always defaulting to 'master' as fallback_branch
+when the indicated branch was missing, but there may be repos where
+the default branch is another one.
+
+Change-Id: Ib787438cf5b9c1dc80f618b271d15f163f7c695d
+---
+ tests/test_cloner.py | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ zuul/lib/cloner.py   |  9 +++++++--
+ 2 files changed, 64 insertions(+), 2 deletions(-)
+
+diff --git a/tests/test_cloner.py b/tests/test_cloner.py
+index 896fcba..dc9eca5 100644
+--- a/tests/test_cloner.py
++++ b/tests/test_cloner.py
+@@ -20,6 +20,11 @@ import os
+ import shutil
+ import time
+ 
++try:
++    from unittest import mock
++except ImportError:
++    import mock
++
+ import git
+ 
+ import zuul.lib.cloner
+@@ -752,3 +757,55 @@ class TestCloner(ZuulTestCase):
+                               'Project %s commit for build %s should '
+                               'be correct' % (project, 0))
+         shutil.rmtree(self.workspace_root)
++
++    @mock.patch('zuul.merger.merger.Repo.checkout')
++    def test_fallback_branch(self, mock_checkout):
++        projects = ["org/project1"]
++
++        cloner = zuul.lib.cloner.Cloner(
++            git_base_url=self.upstream_root,
++            projects=projects,
++            workspace=self.workspace_root,
++            branch='foo',
++            zuul_project=None,
++            zuul_branch=None,
++            zuul_ref='HEAD',
++            zuul_newrev=None,
++            zuul_url=self.git_root,
++        )
++        cloner.execute()
++        # We asked for non-existing branch 'foo', master will be cloned
++        expected = [mock.call('remotes/origin/master')]
++        self.assertEqual(mock_checkout.call_count, 1)
++        self.assertEqual(mock_checkout.call_args_list, expected)
++        shutil.rmtree(self.workspace_root)
++
++    @mock.patch('zuul.merger.merger.Repo.checkout')
++    def test_fallback_branch_nonmaster(self, mock_checkout):
++        self.init_repo('org/nonmaster')
++        projects = ['org/nonmaster']
++        # Remove the master branch, create a new default branch
++        repo = git.Repo(os.path.join(self.upstream_root, projects[0]))
++        new_master = repo.create_head('non-master')
++        repo.head.reference = new_master
++        zuul.merger.merger.reset_repo_to_head(repo)
++        repo.git.clean('-x', '-f', '-d')
++        repo.delete_head('master')
++
++        cloner = zuul.lib.cloner.Cloner(
++            git_base_url=self.upstream_root,
++            projects=projects,
++            workspace=self.workspace_root,
++            branch='foo',
++            zuul_project=None,
++            zuul_branch=None,
++            zuul_ref='HEAD',
++            zuul_newrev=None,
++            zuul_url=self.git_root,
++        )
++        cloner.execute()
++        # We asked for non-existing branch 'foo', non-master will be cloned
++        expected = [mock.call('remotes/origin/non-master')]
++        self.assertEqual(mock_checkout.call_count, 1)
++        self.assertEqual(mock_checkout.call_args_list, expected)
++        shutil.rmtree(self.workspace_root)
+diff --git a/zuul/lib/cloner.py b/zuul/lib/cloner.py
+index 6e50eda..2816217 100644
+--- a/zuul/lib/cloner.py
++++ b/zuul/lib/cloner.py
+@@ -201,8 +201,13 @@ class Cloner(object):
+             if indicated_branch:
+                 self.log.info("upstream repo is missing branch %s",
+                               indicated_branch)
+-            # FIXME should be origin HEAD branch which might not be 'master'
+-            fallback_branch = 'master'
++            # Find origin HEAD branch, it might not be 'master'
++            headref = repo.createRepoObject().head.ref
++            try:
++                fallback_branch = headref.ref.name.split('/')[1]
++            except TypeError:
++                # HEAD is a detached symbolic reference, so let's use master
++                fallback_branch = 'master'
+ 
+         if self.zuul_branch:
+             fallback_zuul_ref = re.sub(self.zuul_branch, fallback_branch,
+-- 
+2.10.2
+

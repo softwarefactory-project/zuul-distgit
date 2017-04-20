@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        4.20170310.773651a%{?dist}
+Release:        5.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -17,6 +17,7 @@ Patch0:         0001-Read-all-Gerrit-events-from-poll-interruption.patch
 Patch1:         0001-Keep-existing-loggers-with-fileConfig.patch
 Patch2:         0001-zuul-tmp-url-key.patch
 Patch3:         Fix-Third-party-CI-conflict.patch
+Patch4:	        0001-Find-fallback-branch-in-zuul-cloner.patch
 
 BuildArch:      noarch
 
@@ -189,6 +190,9 @@ exit 0
 
 
 %changelog
+* Thu Apr 20 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-5.20170310.773651a
+- Add zuul-cloner fallback patch
+
 * Tue Apr 18 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-4
 - Use rjsmin instead of uglify
 
