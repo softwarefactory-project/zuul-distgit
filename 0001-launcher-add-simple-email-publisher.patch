@@ -1,0 +1,55 @@
+From e119f350ad0e4b93ffca2577a36b717eb1c8fa6e Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Tue, 16 May 2017 01:49:05 +0000
+Subject: [PATCH] launcher: add simple email publisher
+
+Change-Id: I9da74ca152498208f3692972b1a9f7dcbe41b816
+---
+
+diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
+index 9a65da9..0b19851 100644
+--- a/zuul/launcher/ansiblelaunchserver.py
++++ b/zuul/launcher/ansiblelaunchserver.py
+@@ -1066,6 +1066,32 @@
+ 
+         return task
+ 
++    def _makeEmailTask(self, jobdir, publisher, parameters, job_name):
++        url = "unknown"
++        if self.config.has_option("zuul", "url_pattern"):
++            class _Build:
++                def __init__(self, parameters):
++                    self.parameters = parameters
++            try:
++                url = self.config.get("zuul", "url_pattern").format(
++                    build=_Build(parameters))
++            except:
++                self.log.exception("Exception formatting url_pattern")
++        mailargs = dict(
++            to=",".join(publisher["email"].get("recipients", "root").split()),
++            subject="Build failed in zuul-launcher: %s #%s" % (
++                job_name,
++                parameters.get("ZUUL_UUID")),
++            body="Logs url: %s" % url,
++            headers="X-Zuul-Job=%s" % job_name,
++        )
++        mailargs["from"] = "zuul"
++        task = dict(name='Send email',
++                    mail=mailargs,
++                    when='not success|bool',
++                    delegate_to='127.0.0.1')
++        return [task]
++
+     def _makeFTPTask(self, jobdir, publisher, parameters):
+         tasks = []
+         ftp = publisher['ftp']
+@@ -1337,6 +1363,9 @@
+                     if 'afs' in publisher:
+                         block.extend(self._makeAFSTask(jobdir, publisher,
+                                                        parameters))
++                    if 'email' in publisher:
++                        block.extend(self._makeEmailTask(jobdir, publisher,
++                                                         parameters, job_name))
+                 blocks.append(block)
+ 
+             # The 'always' section contains the log publishing tasks,

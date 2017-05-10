@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        6.20170310.773651a%{?dist}
+Release:        7.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -18,7 +18,15 @@ Patch1:         0001-Keep-existing-loggers-with-fileConfig.patch
 Patch2:         0001-zuul-tmp-url-key.patch
 Patch3:         Fix-Third-party-CI-conflict.patch
 Patch4:         0001-Find-fallback-branch-in-zuul-cloner.patch
-Patch5:	        0001-Don-t-getChange-on-source-not-triggering-a-change.patch
+Patch5:         0001-Don-t-getChange-on-source-not-triggering-a-change.patch
+# Zuul-launcher fixup
+Patch6:         0001-Support-jenkins-job-builder-2.patch
+Patch7:         0001-launcher-support-unicode-value-in-boolify.patch
+Patch8:         0001-launcher-ensure-builder-scripts-are-removed.patch
+Patch9:         0001-launcher-store-console-log-in-workspace.patch
+Patch10:        0002-launcher-terminate-console-server-after-job-ends.patch
+Patch11:        0002-launcher-add-results_dir-option.patch
+Patch12:        0001-launcher-add-simple-email-publisher.patch
 
 BuildArch:      noarch
 
@@ -82,6 +90,8 @@ The Zuul merger
 %package launcher
 Summary: The Zuul launcher
 Requires: zuul
+Requires: python2-jenkins-job-builder
+Requires: python-zmq
 
 %description launcher
 The Zuul launcher
@@ -119,6 +129,8 @@ install -p -D -m 0640 etc/zuul.conf-sample %{buildroot}%{_sysconfdir}/zuul/zuul.
 install -p -D -m 0644 %{SOURCE20} %{buildroot}%{_sysconfdir}/sysconfig/zuul
 install -p -d -m 0700 %{buildroot}%{_sharedstatedir}/zuul
 install -p -d -m 0700 %{buildroot}%{_var}/log/zuul
+install -p -d -m 0700 %{buildroot}%{_sharedstatedir}/zuul/jobs
+install -p -d -m 0755 %{buildroot}%{_sysconfdir}/zuul/jobs
 
 install -p -D -m 0644 build/web-assets/zuul.app.min.js %{buildroot}/usr/share/javascript/zuul/js/zuul.app.min.js
 install -p -D -m 0644 build/web-assets/jquery.zuul.min.js %{buildroot}/usr/share/javascript/zuul/js/jquery.zuul.min.js
@@ -161,11 +173,12 @@ exit 0
 
 
 %files
-%{_sysconfdir}/zuul/*
-%config(noreplace) %attr(0644, root, root) %{_sysconfdir}/zuul/layout.yaml
 %config(noreplace) %attr(0640, root, zuul) %{_sysconfdir}/zuul/zuul.conf
+%config(noreplace) %{_sysconfdir}/zuul/logging.conf
+%config(noreplace) %{_sysconfdir}/zuul/layout.yaml
 %config(noreplace) %{_sysconfdir}/sysconfig/zuul
-%dir %attr(0750, zuul, zuul) %{_sharedstatedir}/zuul
+%dir %{_sysconfdir}/zuul/jobs
+%dir %attr(0751, zuul, zuul) %{_sharedstatedir}/zuul
 %dir %attr(0750, zuul, zuul) %{_var}/log/zuul
 %{python2_sitelib}/zuul
 %{python2_sitelib}/zuul-*.egg-info
@@ -185,12 +198,18 @@ exit 0
 %files launcher
 %{_bindir}/zuul-launcher
 %{_unitdir}/zuul-launcher.service
+%dir %attr(0700, zuul, zuul) %{_sharedstatedir}/zuul/jobs
 
 %files cloner
 %{_bindir}/zuul-cloner
 
 
 %changelog
+* Wed May 10 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-7.20170310.773651a
+- Fix missing zuul-launcher requirements
+- Add zuul-launcher patches
+- Fix incorrect /etc/zuul/ file config(noreplace)
+
 * Wed Apr 26 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-6.20170310.773651a
 - Add getChange optimization patch
 
