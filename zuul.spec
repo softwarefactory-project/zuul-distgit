@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        6.20170310.773651a%{?dist}
+Release:        7.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -82,6 +82,8 @@ The Zuul merger
 %package launcher
 Summary: The Zuul launcher
 Requires: zuul
+Requires: python2-jenkins-job-builder
+Requires: python-zmq
 
 %description launcher
 The Zuul launcher
@@ -191,6 +193,9 @@ exit 0
 
 
 %changelog
+* Wed May 10 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-7.20170310.773651a
+- Fix zuul-launcher requirements
+
 * Wed Apr 26 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-6.20170310.773651a
 - Add getChange optimization patch
 
