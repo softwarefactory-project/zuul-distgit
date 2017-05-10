@@ -1,0 +1,54 @@
+From 4096675daf0b28aaa04fb924db3db1c330b2742a Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Thu, 11 May 2017 06:10:18 +0000
+Subject: [PATCH] launcher: terminate console server after job ends
+
+The console server is never terminated and it keeps
+running on static node. This change kills the process
+at the end of the publisher playbook.
+
+Change-Id: Ifc0760a75242639ec23d0d3b262c33d4aeff85ad
+---
+
+diff --git a/zuul/ansible/library/zuul_console.py b/zuul/ansible/library/zuul_console.py
+old mode 100644
+new mode 100755
+index e70dac8..9979682
+--- a/zuul/ansible/library/zuul_console.py
++++ b/zuul/ansible/library/zuul_console.py
+@@ -69,6 +69,9 @@
+ 
+         self.socket = s
+ 
++        # Write pid file
++        open("%s.pid" % self.path, "w").write("%d" % os.getpid())
++
+     def accept(self):
+         conn, addr = self.socket.accept()
+         return conn
+diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
+index e674b7d..834ed62 100644
+--- a/zuul/launcher/ansiblelaunchserver.py
++++ b/zuul/launcher/ansiblelaunchserver.py
+@@ -1363,6 +1363,21 @@
+             tasks.append(dict(block=blocks[0],
+                               always=blocks[1]))
+ 
++            task = dict(stat=dict(path="%s.pid" % console_path),
++                        register="console_pid_file")
++            tasks.append(task)
++            task = dict(command="cat %s.pid" % console_path,
++                        register="console_pid",
++                        when='console_pid_file.stat.exists')
++            tasks.append(task)
++            task = dict(command="kill {{console_pid.stdout}}",
++                        when='console_pid_file.stat.exists')
++            tasks.append(task)
++            task = dict(file=dict(path="%s.pid" % console_path,
++                                  state='absent'),
++                        when='console_pid_file.stat.exists')
++            tasks.append(task)
++
+             play = dict(hosts='node', name='Publishers',
+                         tasks=tasks)
+             playbook.write(yaml.safe_dump([play], default_flow_style=False))
