@@ -1,0 +1,33 @@
+From 4a9d5b2256065cf354f44200e61687ef8dff7a51 Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Thu, 11 May 2017 03:33:14 +0000
+Subject: [PATCH] launcher: support unicode value in boolify
+
+Json module returns unicode for str job's arguments and boolify
+incorectly converts OFFLINE_NODE_WHEN_COMPLETE when set to "0".
+This change uses basestring instead of str to check argument type.
+
+Change-Id: I3dd83601f668dc9646347055662b4ce2aa1ca675
+---
+
+diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
+index 9a65da9..effd37b 100644
+--- a/zuul/launcher/ansiblelaunchserver.py
++++ b/zuul/launcher/ansiblelaunchserver.py
+@@ -32,6 +32,7 @@
+ import jenkins_jobs.builder
+ import jenkins_jobs.formatter
+ import zmq
++from six import string_types
+ 
+ import zuul.ansible.library
+ from zuul.lib import commandsocket
+@@ -47,7 +48,7 @@
+ 
+ 
+ def boolify(x):
+-    if isinstance(x, str):
++    if isinstance(x, string_types):
+         return bool(int(x))
+     return bool(x)
+ 
