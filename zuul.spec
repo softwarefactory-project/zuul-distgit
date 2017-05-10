@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        6.20170310.773651a%{?dist}
+Release:        7.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -19,6 +19,7 @@ Patch2:         0001-zuul-tmp-url-key.patch
 Patch3:         Fix-Third-party-CI-conflict.patch
 Patch4:         0001-Find-fallback-branch-in-zuul-cloner.patch
 Patch5:	        0001-Don-t-getChange-on-source-not-triggering-a-change.patch
+Patch5:	        0001-Support-jenkins-job-builder-2.patch
 
 BuildArch:      noarch
 
@@ -82,6 +83,8 @@ The Zuul merger
 %package launcher
 Summary: The Zuul launcher
 Requires: zuul
+Requires: python2-jenkins-job-builder
+Requires: python-zmq
 
 %description launcher
 The Zuul launcher
@@ -119,6 +122,8 @@ install -p -D -m 0640 etc/zuul.conf-sample %{buildroot}%{_sysconfdir}/zuul/zuul.
 install -p -D -m 0644 %{SOURCE20} %{buildroot}%{_sysconfdir}/sysconfig/zuul
 install -p -d -m 0700 %{buildroot}%{_sharedstatedir}/zuul
 install -p -d -m 0700 %{buildroot}%{_var}/log/zuul
+install -p -d -m 0700 %{buildroot}%{_sharedstatedir}/zuul/jobs
+install -p -d -m 0700 %{buildroot}%{_sysconfdir}/zuul/jobs
 
 install -p -D -m 0644 build/web-assets/zuul.app.min.js %{buildroot}/usr/share/javascript/zuul/js/zuul.app.min.js
 install -p -D -m 0644 build/web-assets/jquery.zuul.min.js %{buildroot}/usr/share/javascript/zuul/js/jquery.zuul.min.js
@@ -185,12 +190,16 @@ exit 0
 %files launcher
 %{_bindir}/zuul-launcher
 %{_unitdir}/zuul-launcher.service
+%dir %attr(0700, zuul, zuul) %{_sharedstatedir}/zuul/jobs
 
 %files cloner
 %{_bindir}/zuul-cloner
 
 
 %changelog
+* Wed May 10 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-7.20170310.773651a
+- Fix zuul-launcher requirements
+
 * Wed Apr 26 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-6.20170310.773651a
 - Add getChange optimization patch
 
