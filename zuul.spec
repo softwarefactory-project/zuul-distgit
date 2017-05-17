@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        7.20170310.773651a%{?dist}
+Release:        8.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -27,6 +27,8 @@ Patch9:         0001-launcher-store-console-log-in-workspace.patch
 Patch10:        0002-launcher-terminate-console-server-after-job-ends.patch
 Patch11:        0002-launcher-add-results_dir-option.patch
 Patch12:        0001-launcher-add-simple-email-publisher.patch
+# sql-reporter fixup
+Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 
 BuildArch:      noarch
 
@@ -48,6 +50,7 @@ Requires:       python2-babel
 Requires:       python-six
 Requires:       python-sqlalchemy
 Requires:       python-alembic
+Requires:       python2-PyMySQL
 
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
@@ -111,6 +114,10 @@ rm requirements.txt test-requirements.txt
 
 
 %build
+# Add alembic __init__.py file, otherwise the migration script isn't packaged
+touch zuul/alembic/__init__.py \
+      zuul/alembic/sql_reporter/__init__.py \
+      zuul/alembic/sql_reporter/versions/__init__.py
 PBR_VERSION=%{version} %{__python2} setup.py build
 mkdir build/web-assets
 python2 -mrjsmin < etc/status/public_html/zuul.app.js > build/web-assets/zuul.app.min.js
@@ -205,6 +212,10 @@ exit 0
 
 
 %changelog
+* Wed May 17 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-8.20170310.773651a
+- Add alembic migration script for sql reporter
+- Fix sql-reporter when used in post/periodic pipelines
+
 * Wed May 10 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-7.20170310.773651a
 - Fix missing zuul-launcher requirements
 - Add zuul-launcher patches
