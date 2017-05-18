@@ -1,0 +1,60 @@
+From 48a8512d2550673db84d456cda5c2586ae76acdd Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Thu, 18 May 2017 13:33:52 +0000
+Subject: [PATCH] sql-connection: make _setup_tables staticmethod
+
+This change enables external usage of the setup_tables method.
+
+Change-Id: I0b4c43f24afd0d7f05e9b16565ec63b650e56eb0
+---
+ zuul/connection/sql.py | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/zuul/connection/sql.py b/zuul/connection/sql.py
+index 73429e9..acfa3b8 100644
+--- a/zuul/connection/sql.py
++++ b/zuul/connection/sql.py
+@@ -42,6 +42,8 @@ class SQLConnection(BaseConnection):
+             self.engine = sa.create_engine(self.dburi)
+             self._migrate()
+             self._setup_tables()
++            self.zuul_buildset_table, self.zuul_build_table \
++                = self._setup_tables()
+             self.tables_established = True
+         except sa.exc.NoSuchModuleError:
+             self.log.exception(
+@@ -67,10 +69,11 @@ class SQLConnection(BaseConnection):
+ 
+             alembic.command.upgrade(config, 'head')
+ 
+-    def _setup_tables(self):
++    @staticmethod
++    def _setup_tables():
+         metadata = sa.MetaData()
+ 
+-        self.zuul_buildset_table = sa.Table(
++        zuul_buildset_table = sa.Table(
+             BUILDSET_TABLE, metadata,
+             sa.Column('id', sa.Integer, primary_key=True),
+             sa.Column('zuul_ref', sa.String(255)),
+@@ -83,7 +86,7 @@ class SQLConnection(BaseConnection):
+             sa.Column('message', sa.TEXT()),
+         )
+ 
+-        self.zuul_build_table = sa.Table(
++        zuul_build_table = sa.Table(
+             BUILD_TABLE, metadata,
+             sa.Column('id', sa.Integer, primary_key=True),
+             sa.Column('buildset_id', sa.Integer,
+@@ -98,6 +101,8 @@ class SQLConnection(BaseConnection):
+             sa.Column('node_name', sa.String(255)),
+         )
+ 
++        return zuul_buildset_table, zuul_build_table
++
+ 
+ def getSchema():
+     sql_connection = v.Any(str, v.Schema(dict))
+-- 
+2.10.2
+
