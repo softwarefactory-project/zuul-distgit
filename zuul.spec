@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        9.20170310.773651a%{?dist}
+Release:        10.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -30,6 +30,7 @@ Patch12:        0001-launcher-add-simple-email-publisher.patch
 # sql-reporter fixup
 Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 Patch14:        0001-sql-connection-make-_setup_tables-staticmethod.patch
+Patch15:        0001-connections-only-configure-sql-on-the-server.patch
 
 BuildArch:      noarch
 
@@ -213,6 +214,9 @@ exit 0
 
 
 %changelog
+* Fri May 19 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-10.20170310.773651a
+- Add another sql connection patch
+
 * Thu May 18 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-9.20170310.773651a
 - Add sql connection patch
 

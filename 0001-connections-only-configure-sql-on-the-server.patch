@@ -1,0 +1,71 @@
+From 9e7d61faf44b4aed22fc81ae1ef2d1cc2b931f53 Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Fri, 19 May 2017 01:58:21 +0000
+Subject: [PATCH] connections: only configure sql on the server
+
+The sql reporter doesn't not need to be enabled on the merger
+or the launcher and it will fail if only the zuul server host
+is authorized to connect to the sql database.
+
+Change-Id: I652be19d580e2967a7880b867119e549bc77318c
+---
+
+diff --git a/zuul/cmd/__init__.py b/zuul/cmd/__init__.py
+old mode 100644
+new mode 100755
+index 5ffd431..fa39ddd
+--- a/zuul/cmd/__init__.py
++++ b/zuul/cmd/__init__.py
+@@ -90,6 +90,6 @@
+         else:
+             logging.basicConfig(level=logging.DEBUG)
+ 
+-    def configure_connections(self):
++    def configure_connections(self, enable_sql=False):
+         self.connections = zuul.lib.connections.configure_connections(
+-            self.config)
++            self.config, enable_sql)
+diff --git a/zuul/cmd/server.py b/zuul/cmd/server.py
+index 0b7538d..e703682 100755
+--- a/zuul/cmd/server.py
++++ b/zuul/cmd/server.py
+@@ -88,7 +88,7 @@
+         logging.basicConfig(level=logging.DEBUG)
+         self.sched = zuul.scheduler.Scheduler(self.config,
+                                               testonly=True)
+-        self.configure_connections()
++        self.configure_connections(enable_sql=True)
+         self.sched.registerConnections(self.connections, load=False)
+         layout = self.sched.testConfig(self.config.get('zuul',
+                                                        'layout_config'),
+@@ -189,7 +189,7 @@
+             listen_address=listen_address)
+         rpc = zuul.rpclistener.RPCListener(self.config, self.sched)
+ 
+-        self.configure_connections()
++        self.configure_connections(enable_sql=True)
+         self.sched.setLauncher(gearman)
+         self.sched.setMerger(merger)
+ 
+diff --git a/zuul/lib/connections.py b/zuul/lib/connections.py
+index 7d47775..ba22ecb 100644
+--- a/zuul/lib/connections.py
++++ b/zuul/lib/connections.py
+@@ -20,7 +20,7 @@
+ import zuul.connection.sql
+ 
+ 
+-def configure_connections(config):
++def configure_connections(config, enable_sql=False):
+     log = logging.getLogger("configure_connections")
+     # Register connections from the config
+ 
+@@ -50,6 +50,8 @@
+             connections[con_name] = \
+                 zuul.connection.smtp.SMTPConnection(con_name, con_config)
+         elif con_driver == 'sql':
++            if not enable_sql:
++                continue
+             connections[con_name] = \
+                 zuul.connection.sql.SQLConnection(con_name, con_config)
+         else:
