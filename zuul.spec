@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        10.20170310.773651a%{?dist}
+Release:        11.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -31,6 +31,8 @@ Patch12:        0001-launcher-add-simple-email-publisher.patch
 Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 Patch14:        0001-sql-connection-make-_setup_tables-staticmethod.patch
 Patch15:        0001-connections-only-configure-sql-on-the-server.patch
+# Jenkins credentials binding support
+Patch16:        0002-launcher-add-Jenkins-credentials-binding-support.patch
 
 BuildArch:      noarch
 
@@ -53,6 +55,7 @@ Requires:       python-six
 Requires:       python-sqlalchemy
 Requires:       python-alembic
 Requires:       python2-PyMySQL
+Requires:       python-crypto
 
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
@@ -214,6 +217,9 @@ exit 0
 
 
 %changelog
+* Mon May 22 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-11.20170310.773651a
+- Add jenkins credentials binding support
+
 * Fri May 19 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-10.20170310.773651a
 - Add another sql connection patch
 
