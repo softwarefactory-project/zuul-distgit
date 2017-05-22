@@ -2,13 +2,13 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        10.20170310.773651a%{?dist}
+Release:        11.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
 URL:            http://docs.openstack.org/infra/system-config/
 Source0:        https://github.com/openstack-infra/zuul/archive/%{commit}.tar.gz
-Source1:        zuul.service
+Source1:        zuul-server.service
 Source2:        zuul-merger.service
 Source3:        zuul-launcher.service
 Source20:       sysconfig
@@ -31,6 +31,9 @@ Patch12:        0001-launcher-add-simple-email-publisher.patch
 Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 Patch14:        0001-sql-connection-make-_setup_tables-staticmethod.patch
 Patch15:        0001-connections-only-configure-sql-on-the-server.patch
+Patch16:        0001-Ensure-build.start_time-is-defined-onBuildCompleted.patch
+# Jenkins credentials binding support
+Patch17:        0002-launcher-add-Jenkins-credentials-binding-support.patch
 
 BuildArch:      noarch
 
@@ -53,6 +56,7 @@ Requires:       python-six
 Requires:       python-sqlalchemy
 Requires:       python-alembic
 Requires:       python2-PyMySQL
+Requires:       python-crypto
 
 BuildRequires:  python2-devel
 BuildRequires:  python-pbr
@@ -130,6 +134,7 @@ pyscss -o build/web-assets/zuul.min.css etc/status/public_html/styles/zuul.css
 %install
 PBR_VERSION=%{version} %{__python2} setup.py install --skip-build --root %{buildroot}
 install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/zuul.service
+install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/zuul-server.service
 install -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/zuul-merger.service
 install -p -D -m 0644 %{SOURCE3} %{buildroot}%{_unitdir}/zuul-launcher.service
 install -p -D -m 0644 etc/layout.yaml-sample %{buildroot}%{_sysconfdir}/zuul/layout.yaml
@@ -159,6 +164,7 @@ exit 0
 
 %post server
 %systemd_post zuul.service
+%systemd_post zuul-server.service
 %post merger
 %systemd_post zuul-merger.service
 %post launcher
@@ -167,6 +173,7 @@ exit 0
 
 %preun server
 %systemd_preun zuul.service
+%systemd_preun zuul-server.service
 %preun merger
 %systemd_preun zuul-merger.service
 %preun launcher
@@ -175,6 +182,7 @@ exit 0
 
 %postun server
 %systemd_postun_with_restart zuul.service
+%systemd_postun_with_restart zuul-server.service
 %postun merger
 %systemd_postun_with_restart zuul-merger.service
 %postun launcher
@@ -198,6 +206,7 @@ exit 0
 
 %files server
 %{_bindir}/zuul-server
+%{_unitdir}/zuul-server.service
 %{_unitdir}/zuul.service
 
 %files merger
@@ -214,6 +223,11 @@ exit 0
 
 
 %changelog
+* Mon May 22 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-11.20170310.773651a
+- Add jenkins credentials binding support
+- Add another sql reporter fix
+- Add zuul-server systemd unit (while keeping the 'zuul' one for retro compat)
+
 * Fri May 19 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-10.20170310.773651a
 - Add another sql connection patch
 

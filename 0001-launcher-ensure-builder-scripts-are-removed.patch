@@ -1,37 +1,27 @@
-From 6e64f5af75d4ce1911fd79ee1a797f44126751a2 Mon Sep 17 00:00:00 2001
+From b85fea518cee61b255afa0a7f6a56ad233f1d95e Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Thu, 11 May 2017 04:31:21 +0000
 Subject: [PATCH] launcher: ensure builder scripts are removed
 
 When the builder script fails, the file absent task is
 not executed. This change uses a block with the always
-section.
+section to ensure the scripts are removed.
 
 Change-Id: I99c2df7705b4ea83add614cea3e187886bcf8bd0
 ---
 
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
-index 9a65da9..a7cc3ff 100644
+index 9a65da9..2deeafb 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
-@@ -1208,9 +1208,9 @@
+@@ -1208,9 +1208,7 @@
          filetask = dict(path=remote_path,
                          state='absent')
          task = dict(file=filetask)
 -        tasks.append(task)
-+        block = dict(block=tasks, always=[task])
- 
+-
 -        return tasks
-+        return block
++        return [dict(block=tasks, always=[task])]
  
      def _transformPublishers(self, jjb_job):
          early_publishers = []
-@@ -1314,7 +1314,7 @@
-             for builder in jjb_job.get('builders', []):
-                 if 'shell' in builder:
-                     sequence += 1
--                    tasks.extend(
-+                    tasks.append(
-                         self._makeBuilderTask(jobdir, builder, parameters,
-                                               sequence))
- 
