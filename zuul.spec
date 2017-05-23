@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        11.20170310.773651a%{?dist}
+Release:        12.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -133,7 +133,6 @@ pyscss -o build/web-assets/zuul.min.css etc/status/public_html/styles/zuul.css
 
 %install
 PBR_VERSION=%{version} %{__python2} setup.py install --skip-build --root %{buildroot}
-install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/zuul.service
 install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/zuul-server.service
 install -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/zuul-merger.service
 install -p -D -m 0644 %{SOURCE3} %{buildroot}%{_unitdir}/zuul-launcher.service
@@ -163,7 +162,6 @@ exit 0
 
 
 %post server
-%systemd_post zuul.service
 %systemd_post zuul-server.service
 %post merger
 %systemd_post zuul-merger.service
@@ -172,7 +170,6 @@ exit 0
 
 
 %preun server
-%systemd_preun zuul.service
 %systemd_preun zuul-server.service
 %preun merger
 %systemd_preun zuul-merger.service
@@ -181,7 +178,6 @@ exit 0
 
 
 %postun server
-%systemd_postun_with_restart zuul.service
 %systemd_postun_with_restart zuul-server.service
 %postun merger
 %systemd_postun_with_restart zuul-merger.service
@@ -207,7 +203,6 @@ exit 0
 %files server
 %{_bindir}/zuul-server
 %{_unitdir}/zuul-server.service
-%{_unitdir}/zuul.service
 
 %files merger
 %{_bindir}/zuul-merger
@@ -223,6 +218,9 @@ exit 0
 
 
 %changelog
+* Tue May 23 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-12.20170310.773651a
+- Remove zuul.service
+
 * Mon May 22 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-11.20170310.773651a
 - Add jenkins credentials binding support
 - Add another sql reporter fix
