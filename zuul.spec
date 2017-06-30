@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        12.20170310.773651a%{?dist}
+Release:        13.20170310.773651a%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -25,13 +25,12 @@ Patch7:         0001-launcher-support-unicode-value-in-boolify.patch
 Patch8:         0001-launcher-ensure-builder-scripts-are-removed.patch
 Patch9:         0001-launcher-store-console-log-in-workspace.patch
 Patch10:        0002-launcher-terminate-console-server-after-job-ends.patch
-Patch11:        0002-launcher-add-results_dir-option.patch
 Patch12:        0001-launcher-add-simple-email-publisher.patch
 # sql-reporter fixup
 Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 Patch14:        0001-sql-connection-make-_setup_tables-staticmethod.patch
 Patch15:        0001-connections-only-configure-sql-on-the-server.patch
-Patch16:        0001-Ensure-build.start_time-is-defined-onBuildCompleted.patch
+Patch16:        0001-Ensure-build.start_time-is-defined.patch
 # Jenkins credentials binding support
 Patch17:        0002-launcher-add-Jenkins-credentials-binding-support.patch
 
@@ -218,6 +217,9 @@ exit 0
 
 
 %changelog
+* Fri Jun 30 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-13
+- Remove zuul results patch
+
 * Tue May 23 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-12.20170310.773651a
 - Remove zuul.service
 
