@@ -1,0 +1,49 @@
+From c39fae8ec8c6d2ef28e08f507e7a2915cdb4bd2d Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Mon, 22 May 2017 13:25:07 +0000
+Subject: [PATCH] Ensure build.start_time is defined
+
+When a build failed with NOT_REGISTERED or RETRY_LIMIT, the onBuildStarted
+method isn't called, resulting in the sql reporter failing with:
+
+Traceback (most recent call last):
+  File "zuul/scheduler.py", line 1774, in _reportItem
+    ret = self.sendReport(actions, self.pipeline.source, item)
+  File "zuul/scheduler.py", line 1298, in sendReport
+    ret = reporter.report(source, self.pipeline, item)
+  File "zuul/reporter/sql.py", line 92, in report
+    build.start_time),
+TypeError: a float is required
+
+Change-Id: I4f79e4bc48e81b3ae21111723084f65642c040c2
+---
+ zuul/reporter/sql.py | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/zuul/reporter/sql.py b/zuul/reporter/sql.py
+index b663a59..70a53bd 100644
+--- a/zuul/reporter/sql.py
++++ b/zuul/reporter/sql.py
+@@ -14,6 +14,7 @@
+ 
+ import datetime
+ import logging
++import time
+ import voluptuous as v
+ 
+ from zuul.reporter import BaseReporter
+@@ -67,6 +68,11 @@ class SQLReporter(BaseReporter):
+                     # stats about builds. It doesn't understand how to store
+                     # information about the change.
+                     continue
++                # Ensure start_time/end_time are float
++                if not build.start_time:
++                    build.start_time = time.time()
++                if not build.end_time:
++                    build.end_time = time.time()
+ 
+                 (result, url) = item.formatJobResult(job, url_pattern)
+ 
+-- 
+2.10.2
+

@@ -1,20 +1,22 @@
-From b918801901bd4c8d6f7ad60d9325ea4b3b895a13 Mon Sep 17 00:00:00 2001
+From 620ee94e499f59e904f3a44f978a3d2c586f4223 Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Wed, 17 May 2017 12:36:00 +0000
 Subject: [PATCH] sql-reporter: add support for Ref change
 
 This change fixes AttributeErrors when the sql reporter
 is used in post/periodic pipelines where the item.change is of
-type Ref without number/patchset/refspec members.
+type Ref without number/patchset/refspec or newrev members.
 
 Change-Id: I11696b41a0a71405dfb7845ce222ef302a96986b
 ---
+ zuul/reporter/sql.py | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
 diff --git a/zuul/reporter/sql.py b/zuul/reporter/sql.py
-index b663a59..86ac995 100644
+index b663a59..4ebbb08 100644
 --- a/zuul/reporter/sql.py
 +++ b/zuul/reporter/sql.py
-@@ -46,13 +46,25 @@
+@@ -46,13 +46,27 @@ class SQLReporter(BaseReporter):
              if 'score' in self.reporter_config else 0
  
          with self.connection.engine.begin() as conn:
@@ -28,8 +30,10 @@ index b663a59..86ac995 100644
 +                patchset = ''
 +            if hasattr(item.change, 'refspec'):
 +                refspec = item.change.refspec
-+            else:
++            elif hasattr(item.change, 'newrev'):
 +                refspec = item.change.newrev
++            else:
++                refspec = ''
              buildset_ins = self.connection.zuul_buildset_table.insert().values(
                  zuul_ref=item.current_build_set.ref,
                  pipeline=item.pipeline.name,
@@ -43,3 +47,6 @@ index b663a59..86ac995 100644
                  score=score,
                  message=self._formatItemReport(
                      pipeline, item, with_jobs=False),
+-- 
+2.10.2
+
