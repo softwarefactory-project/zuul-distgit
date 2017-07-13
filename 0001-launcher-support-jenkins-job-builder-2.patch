@@ -1,19 +1,21 @@
-From 784e99ef4ca9e753548fbe14078d2e959ed47152 Mon Sep 17 00:00:00 2001
+From 43205fe7475306a4119665fbd3e79d17d458570b Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Wed, 10 May 2017 10:35:53 +0000
-Subject: [PATCH] launcher: support jenkins-job-builder>=2
+Subject: [PATCH 1/7] launcher: support jenkins-job-builder>=2
 
 Recent version of jenkins-job-builder renamed the Builder class
 to JenkinsManager and removed the embedded parser.
 
 Change-Id: Iba78c0cdf1592126ec8244ae5424f6fbb5436c32
 ---
+ zuul/launcher/ansiblelaunchserver.py | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
 index 9a65da9..a50cdd3 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
-@@ -29,7 +29,17 @@
+@@ -29,7 +29,17 @@ import Queue
  
  import gear
  import yaml
@@ -32,7 +34,7 @@ index 9a65da9..a50cdd3 100644
  import jenkins_jobs.formatter
  import zmq
  
-@@ -302,8 +312,13 @@
+@@ -302,8 +312,13 @@ class LaunchServer(object):
          self.log.debug("Loading jobs")
          builder = JJB()
          path = self.config.get('launcher', 'jenkins_jobs')
@@ -48,7 +50,7 @@ index 9a65da9..a50cdd3 100644
          unseen = set(self.jobs.keys())
          for job in builder.parser.jobs:
              builder.expandMacros(job)
-@@ -1541,9 +1556,11 @@
+@@ -1541,9 +1556,11 @@ class NodeWorker(object):
          return ret == 0
  
  
@@ -61,3 +63,6 @@ index 9a65da9..a50cdd3 100644
          self._plugins_list = []
  
      def expandComponent(self, component_type, component, template_data):
+-- 
+2.10.2
+

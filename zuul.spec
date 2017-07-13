@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        13.20170407.1713ee6%{?dist}
+Release:        14.20170407.1713ee6%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -20,19 +20,18 @@ Patch3:         Fix-Third-party-CI-conflict.patch
 Patch4:         0001-Find-fallback-branch-in-zuul-cloner.patch
 Patch5:         0001-Don-t-getChange-on-source-not-triggering-a-change.patch
 # Zuul-launcher fixup
-Patch6:         0001-Support-jenkins-job-builder-2.patch
-Patch7:         0001-launcher-support-unicode-value-in-boolify.patch
-Patch8:         0001-launcher-ensure-builder-scripts-are-removed.patch
-Patch9:         0001-launcher-store-console-log-in-workspace.patch
-Patch10:        0002-launcher-terminate-console-server-after-job-ends.patch
-Patch12:        0001-launcher-add-simple-email-publisher.patch
+Patch6:         0001-launcher-support-jenkins-job-builder-2.patch
+Patch7:         0002-launcher-support-unicode-value-in-boolify.patch
+Patch8:         0003-launcher-ensure-builder-scripts-are-removed.patch
+Patch9:         0004-launcher-store-console-log-in-workspace.patch
+Patch10:        0005-launcher-terminate-console-server-after-job-ends.patch
+Patch12:        0006-launcher-add-simple-email-publisher.patch
+Patch17:        0007-launcher-add-Jenkins-credentials-binding-support.patch
 # sql-reporter fixup
 Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 Patch14:        0001-sql-connection-make-_setup_tables-staticmethod.patch
 Patch15:        0001-connections-only-configure-sql-on-the-server.patch
 Patch16:        0001-Ensure-build.start_time-is-defined.patch
-# Jenkins credentials binding support
-Patch17:        0002-launcher-add-Jenkins-credentials-binding-support.patch
 
 BuildArch:      noarch
 
@@ -217,6 +216,9 @@ exit 0
 
 
 %changelog
+* Thu Jul 13 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-14
+- Fix patch order
+
 * Fri Jun 30 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-13
 - Remove zuul results patch
 - Fix the sql reporter for periodic job
