@@ -1,13 +1,19 @@
-From 85361859af5d6f4b5119ac13bcff350af4d38330 Mon Sep 17 00:00:00 2001
+From 392e35b26364db89ad333298d195202bbebde7af Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Thu, 11 May 2017 05:25:02 +0000
-Subject: [PATCH] launcher: store console log in workspace
+Subject: [PATCH 4/7] launcher: store console log in workspace
 
 This change modifies ansible libraries to support a custom
 console log path in order to prevent using insecure /tmp location.
 
 Change-Id: I5901f0d8ed73ef8dcaebeeacddccbc69d72b12e0
 ---
+ zuul/ansible/library/command.py      | 19 ++++++++------
+ zuul/ansible/library/zuul_log.py     | 12 ++++++---
+ zuul/launcher/ansiblelaunchserver.py | 48 +++++++++++++++++++++---------------
+ 3 files changed, 48 insertions(+), 31 deletions(-)
+ mode change 100644 => 100755 zuul/ansible/library/command.py
+ mode change 100644 => 100755 zuul/ansible/library/zuul_log.py
 
 diff --git a/zuul/ansible/library/command.py b/zuul/ansible/library/command.py
 old mode 100644
@@ -15,7 +21,7 @@ new mode 100755
 index 6390322..19f7911
 --- a/zuul/ansible/library/command.py
 +++ b/zuul/ansible/library/command.py
-@@ -125,8 +125,11 @@
+@@ -125,8 +125,11 @@ PASSWD_ARG_RE = re.compile(r'^[-]{0,2}pass[-]?(word|wd)?')
  
  
  class Console(object):
@@ -28,7 +34,7 @@ index 6390322..19f7911
          return self
  
      def __exit__(self, etype, value, tb):
-@@ -142,9 +145,9 @@
+@@ -142,9 +145,9 @@ class Console(object):
          self.logfile.write(outln)
  
  
@@ -40,7 +46,7 @@ index 6390322..19f7911
          while True:
              line = fd.readline()
              if not line:
-@@ -159,7 +162,7 @@
+@@ -159,7 +162,7 @@ def follow(fd):
  
  # Taken from ansible/module_utils/basic.py ... forking the method for now
  # so that we can dive in and figure out how to make appropriate hook points
@@ -49,7 +55,7 @@ index 6390322..19f7911
      '''
      Execute a command, returns rc, stdout, and stderr.
  
-@@ -308,7 +311,7 @@
+@@ -308,7 +311,7 @@ def zuul_run_command(self, args, check_rc=False, close_fds=True, executable=None
              self.log('Executing: ' + running)
          # ZUUL: Replaced the excution loop with the zuul_runner run function
          cmd = subprocess.Popen(args, **kwargs)
@@ -58,7 +64,7 @@ index 6390322..19f7911
          t.daemon = True
          t.start()
          ret = cmd.wait()
-@@ -317,7 +320,7 @@
+@@ -317,7 +320,7 @@ def zuul_run_command(self, args, check_rc=False, close_fds=True, executable=None
          # likely stuck in readline() because it spawed a child that is
          # holding stdout or stderr open.
          t.join(10)
@@ -67,7 +73,7 @@ index 6390322..19f7911
              if t.isAlive():
                  console.addLine("[Zuul] standard output/error still open "
                                  "after child exited")
-@@ -392,6 +395,7 @@
+@@ -392,6 +395,7 @@ def main():
            removes = dict(type='path'),
            warn = dict(type='bool', default=True),
            environ = dict(type='dict', default=None),
@@ -75,7 +81,7 @@ index 6390322..19f7911
          )
      )
  
-@@ -403,6 +407,7 @@
+@@ -403,6 +407,7 @@ def main():
      removes  = module.params['removes']
      warn = module.params['warn']
      environ = module.params['environ']
@@ -83,7 +89,7 @@ index 6390322..19f7911
  
      if args.strip() == '':
          module.fail_json(rc=256, msg="no command given")
-@@ -443,7 +448,7 @@
+@@ -443,7 +448,7 @@ def main():
          args = shlex.split(args)
      startd = datetime.datetime.now()
  
@@ -98,7 +104,7 @@ new mode 100755
 index 4b377d9..ad7d6d4
 --- a/zuul/ansible/library/zuul_log.py
 +++ b/zuul/ansible/library/zuul_log.py
-@@ -20,8 +20,11 @@
+@@ -20,8 +20,11 @@ import datetime
  
  
  class Console(object):
@@ -111,7 +117,7 @@ index 4b377d9..ad7d6d4
          return self
  
      def __exit__(self, etype, value, tb):
-@@ -33,10 +36,10 @@
+@@ -33,10 +36,10 @@ class Console(object):
          self.logfile.write(outln)
  
  
@@ -124,7 +130,7 @@ index 4b377d9..ad7d6d4
          for line in msg:
              console.addLine("[Zuul] %s\n" % line)
  
-@@ -45,11 +48,12 @@
+@@ -45,11 +48,12 @@ def main():
      module = AnsibleModule(
          argument_spec=dict(
              msg=dict(required=True, type='raw'),
@@ -139,10 +145,10 @@ index 4b377d9..ad7d6d4
  
  from ansible.module_utils.basic import *  # noqa
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
-index 9a65da9..169a4d0 100644
+index 36da983..e27bb74 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
-@@ -975,7 +975,7 @@
+@@ -991,7 +991,7 @@ class NodeWorker(object):
                        '--prune-empty-dirs']
          return rsync_opts
  
@@ -151,7 +157,7 @@ index 9a65da9..169a4d0 100644
          tasks = []
          for scpfile in publisher['scp']['files']:
              scproot = tempfile.mkdtemp(dir=jobdir.staging_root)
-@@ -995,8 +995,10 @@
+@@ -1011,8 +1011,10 @@ class NodeWorker(object):
                  tasks.append(task)
  
                  # Fetch the console log from the remote host.
@@ -164,7 +170,7 @@ index 9a65da9..169a4d0 100644
              else:
                  src = parameters['WORKSPACE']
                  if not src.endswith('/'):
-@@ -1004,12 +1006,12 @@
+@@ -1020,12 +1022,12 @@ class NodeWorker(object):
                  rsync_opts = self._getRsyncOptions(scpfile['source'],
                                                     parameters)
  
@@ -183,7 +189,7 @@ index 9a65da9..169a4d0 100644
              task = dict(name='copy files from node',
                          synchronize=syncargs)
              if not scpfile.get('copy-after-failure'):
-@@ -1182,7 +1184,8 @@
+@@ -1198,7 +1200,8 @@ class NodeWorker(object):
  
          return tasks
  
@@ -193,7 +199,7 @@ index 9a65da9..169a4d0 100644
          tasks = []
          script_fn = '%02d-%s.sh' % (sequence, str(uuid.uuid4().hex))
          script_path = os.path.join(jobdir.script_root, script_fn)
-@@ -1202,7 +1205,8 @@
+@@ -1218,7 +1221,8 @@ class NodeWorker(object):
          task = dict(command=remote_path)
          task['name'] = 'command generated from JJB'
          task['environment'] = "{{ zuul.environment }}"
@@ -203,7 +209,7 @@ index 9a65da9..169a4d0 100644
          tasks.append(task)
  
          filetask = dict(path=remote_path,
-@@ -1246,6 +1250,7 @@
+@@ -1260,6 +1264,7 @@ class NodeWorker(object):
  
          parameters = args.copy()
          parameters['WORKSPACE'] = os.path.join(self.workspace_root, job_name)
@@ -211,7 +217,7 @@ index 9a65da9..169a4d0 100644
  
          with open(jobdir.inventory, 'w') as inventory:
              for host_name, host_vars in self.getHostList():
-@@ -1285,11 +1290,10 @@
+@@ -1299,11 +1304,10 @@ class NodeWorker(object):
              tasks = []
              tasks.append(dict(shell=shellargs, delegate_to='127.0.0.1'))
  
@@ -225,7 +231,7 @@ index 9a65da9..169a4d0 100644
              tasks.append(task)
  
              task = dict(file=dict(path=parameters['WORKSPACE'],
-@@ -1300,7 +1304,7 @@
+@@ -1314,7 +1318,7 @@ class NodeWorker(object):
                  "Launched by %s" % self.manager_name,
                  "Building remotely on %s in workspace %s" % (
                      self.name, parameters['WORKSPACE'])]
@@ -234,7 +240,7 @@ index 9a65da9..169a4d0 100644
              tasks.append(task)
  
              play = dict(hosts='node', name='Job setup', tasks=tasks)
-@@ -1316,7 +1320,7 @@
+@@ -1330,7 +1334,7 @@ class NodeWorker(object):
                      sequence += 1
                      tasks.extend(
                          self._makeBuilderTask(jobdir, builder, parameters,
@@ -243,7 +249,7 @@ index 9a65da9..169a4d0 100644
  
              play = dict(hosts='node', name='Job body', tasks=tasks)
              playbook.write(yaml.safe_dump([play], default_flow_style=False))
-@@ -1330,7 +1334,8 @@
+@@ -1344,7 +1348,8 @@ class NodeWorker(object):
                  for publisher in publishers:
                      if 'scp' in publisher:
                          block.extend(self._makeSCPTask(jobdir, publisher,
@@ -253,7 +259,7 @@ index 9a65da9..169a4d0 100644
                      if 'ftp' in publisher:
                          block.extend(self._makeFTPTask(jobdir, publisher,
                                                         parameters))
-@@ -1345,13 +1350,16 @@
+@@ -1359,13 +1364,16 @@ class NodeWorker(object):
              # of the publishers succeed.
              tasks = []
  
@@ -273,3 +279,6 @@ index 9a65da9..169a4d0 100644
                          when='not success|bool and timedout|bool')
              blocks[0].insert(0, task)
  
+-- 
+2.10.2
+

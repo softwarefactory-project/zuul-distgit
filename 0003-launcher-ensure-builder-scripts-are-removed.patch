@@ -1,7 +1,7 @@
-From b85fea518cee61b255afa0a7f6a56ad233f1d95e Mon Sep 17 00:00:00 2001
+From 31b47260a0662ad415054da9f6342af5d20ea876 Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Thu, 11 May 2017 04:31:21 +0000
-Subject: [PATCH] launcher: ensure builder scripts are removed
+Subject: [PATCH 3/7] launcher: ensure builder scripts are removed
 
 When the builder script fails, the file absent task is
 not executed. This change uses a block with the always
@@ -9,12 +9,14 @@ section to ensure the scripts are removed.
 
 Change-Id: I99c2df7705b4ea83add614cea3e187886bcf8bd0
 ---
+ zuul/launcher/ansiblelaunchserver.py | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
-index 9a65da9..2deeafb 100644
+index cdb234d..36da983 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
-@@ -1208,9 +1208,7 @@
+@@ -1224,9 +1224,7 @@ class NodeWorker(object):
          filetask = dict(path=remote_path,
                          state='absent')
          task = dict(file=filetask)
@@ -25,3 +27,6 @@ index 9a65da9..2deeafb 100644
  
      def _transformPublishers(self, jjb_job):
          early_publishers = []
+-- 
+2.10.2
+
