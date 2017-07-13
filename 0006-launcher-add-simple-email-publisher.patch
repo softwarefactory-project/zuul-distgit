@@ -1,16 +1,18 @@
-From e119f350ad0e4b93ffca2577a36b717eb1c8fa6e Mon Sep 17 00:00:00 2001
+From 3b3899c2a6ab68e81811b3d4eb78315d1016d59a Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Tue, 16 May 2017 01:49:05 +0000
-Subject: [PATCH] launcher: add simple email publisher
+Subject: [PATCH 6/7] launcher: add simple email publisher
 
 Change-Id: I9da74ca152498208f3692972b1a9f7dcbe41b816
 ---
+ zuul/launcher/ansiblelaunchserver.py | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
-index 9a65da9..0b19851 100644
+index 5c93935..4ba4188 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
-@@ -1066,6 +1066,32 @@
+@@ -1084,6 +1084,32 @@ class NodeWorker(object):
  
          return task
  
@@ -43,7 +45,7 @@ index 9a65da9..0b19851 100644
      def _makeFTPTask(self, jobdir, publisher, parameters):
          tasks = []
          ftp = publisher['ftp']
-@@ -1337,6 +1363,9 @@
+@@ -1356,6 +1382,9 @@ class NodeWorker(object):
                      if 'afs' in publisher:
                          block.extend(self._makeAFSTask(jobdir, publisher,
                                                         parameters))
@@ -53,3 +55,6 @@ index 9a65da9..0b19851 100644
                  blocks.append(block)
  
              # The 'always' section contains the log publishing tasks,
+-- 
+2.10.2
+

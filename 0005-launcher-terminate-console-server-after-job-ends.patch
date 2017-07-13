@@ -1,7 +1,7 @@
-From b0802c34c164bc943f185866243c56b4a01a7fde Mon Sep 17 00:00:00 2001
+From 5640e97addaf453056f6319218639574ea0d0c25 Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Thu, 11 May 2017 06:10:18 +0000
-Subject: [PATCH] launcher: terminate console server after job ends
+Subject: [PATCH 5/7] launcher: terminate console server after job ends
 
 The console server is never terminated and it keeps
 running on static node. This change kills the process
@@ -9,6 +9,10 @@ at the end of the publisher playbook.
 
 Change-Id: Ifc0760a75242639ec23d0d3b262c33d4aeff85ad
 ---
+ zuul/ansible/library/zuul_console.py |  3 +++
+ zuul/launcher/ansiblelaunchserver.py | 19 +++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+ mode change 100644 => 100755 zuul/ansible/library/zuul_console.py
 
 diff --git a/zuul/ansible/library/zuul_console.py b/zuul/ansible/library/zuul_console.py
 old mode 100644
@@ -16,7 +20,7 @@ new mode 100755
 index e70dac8..9979682
 --- a/zuul/ansible/library/zuul_console.py
 +++ b/zuul/ansible/library/zuul_console.py
-@@ -69,6 +69,9 @@
+@@ -69,6 +69,9 @@ class Server(object):
  
          self.socket = s
  
@@ -27,10 +31,10 @@ index e70dac8..9979682
          conn, addr = self.socket.accept()
          return conn
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
-index 169a4d0..f64acc0 100644
+index e27bb74..5c93935 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
-@@ -1366,6 +1366,25 @@
+@@ -1380,6 +1380,25 @@ class NodeWorker(object):
              tasks.append(dict(block=blocks[0],
                                always=blocks[1]))
  
@@ -56,3 +60,6 @@ index 169a4d0..f64acc0 100644
              play = dict(hosts='node', name='Publishers',
                          tasks=tasks)
              playbook.write(yaml.safe_dump([play], default_flow_style=False))
+-- 
+2.10.2
+
