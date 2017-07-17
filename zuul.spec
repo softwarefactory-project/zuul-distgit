@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        14.20170407.1713ee6%{?dist}
+Release:        15.20170407.1713ee6%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -32,6 +32,8 @@ Patch13:        0001-sql-reporter-add-support-for-Ref-change.patch
 Patch14:        0001-sql-connection-make-_setup_tables-staticmethod.patch
 Patch15:        0001-connections-only-configure-sql-on-the-server.patch
 Patch16:        0001-Ensure-build.start_time-is-defined.patch
+# final jenkins fix
+Patch17:        0001-model-keep-jenkins-url-as-is.patch
 
 BuildArch:      noarch
 
@@ -216,6 +218,9 @@ exit 0
 
 
 %changelog
+* Mon Jul 17 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-15
+- Add jenkins url fix
+
 * Thu Jul 13 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-14
 - Fix patch order
 

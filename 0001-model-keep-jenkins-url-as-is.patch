@@ -1,0 +1,29 @@
+From 5ecc7172cbe8049ed6ce5bcfd43884f8ddc17ae2 Mon Sep 17 00:00:00 2001
+From: Tristan Cacqueray <tdecacqu@redhat.com>
+Date: Mon, 17 Jul 2017 13:56:06 +0000
+Subject: [PATCH] model: keep jenkins url as-is
+
+Change-Id: Icf4209575ce06c824bf73c3bd8f8e4498a7ddf05
+---
+ zuul/model.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/zuul/model.py b/zuul/model.py
+index b24a06b..1c8662e 100644
+--- a/zuul/model.py
++++ b/zuul/model.py
+@@ -754,7 +754,10 @@ class QueueItem(object):
+             if job.failure_pattern:
+                 pattern = job.failure_pattern
+         url = None
+-        if pattern:
++        if build.url and "telnet://" not in build.url and "/jenkins/job/" in build.url:
++            # This is a jenkins job, keep the url as-is
++            url = build.url
++        elif pattern:
+             try:
+                 url = pattern.format(change=self.change,
+                                      pipeline=self.pipeline,
+-- 
+2.10.2
+
