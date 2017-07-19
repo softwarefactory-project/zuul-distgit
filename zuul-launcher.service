@@ -9,7 +9,6 @@ Group=zuul
 EnvironmentFile=-/etc/sysconfig/zuul
 ExecStart=/usr/bin/zuul-launcher -d
 ExecReload=/usr/bin/zuul-launcher reconfigure
-PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target

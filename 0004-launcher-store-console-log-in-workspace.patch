@@ -1,4 +1,4 @@
-From 392e35b26364db89ad333298d195202bbebde7af Mon Sep 17 00:00:00 2001
+From c269eb8440029e091fe3b091c106c7e8d21343d3 Mon Sep 17 00:00:00 2001
 From: Tristan Cacqueray <tdecacqu@redhat.com>
 Date: Thu, 11 May 2017 05:25:02 +0000
 Subject: [PATCH 4/7] launcher: store console log in workspace
@@ -8,10 +8,10 @@ console log path in order to prevent using insecure /tmp location.
 
 Change-Id: I5901f0d8ed73ef8dcaebeeacddccbc69d72b12e0
 ---
- zuul/ansible/library/command.py      | 19 ++++++++------
+ zuul/ansible/library/command.py      | 19 ++++++++-----
  zuul/ansible/library/zuul_log.py     | 12 ++++++---
- zuul/launcher/ansiblelaunchserver.py | 48 +++++++++++++++++++++---------------
- 3 files changed, 48 insertions(+), 31 deletions(-)
+ zuul/launcher/ansiblelaunchserver.py | 52 +++++++++++++++++++++---------------
+ 3 files changed, 50 insertions(+), 33 deletions(-)
  mode change 100644 => 100755 zuul/ansible/library/command.py
  mode change 100644 => 100755 zuul/ansible/library/zuul_log.py
 
@@ -145,7 +145,7 @@ index 4b377d9..ad7d6d4
  
  from ansible.module_utils.basic import *  # noqa
 diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
-index 36da983..e27bb74 100644
+index 36da983..01f305a 100644
 --- a/zuul/launcher/ansiblelaunchserver.py
 +++ b/zuul/launcher/ansiblelaunchserver.py
 @@ -991,7 +991,7 @@ class NodeWorker(object):
@@ -217,21 +217,26 @@ index 36da983..e27bb74 100644
  
          with open(jobdir.inventory, 'w') as inventory:
              for host_name, host_vars in self.getHostList():
-@@ -1299,11 +1304,10 @@ class NodeWorker(object):
+@@ -1299,22 +1304,21 @@ class NodeWorker(object):
              tasks = []
              tasks.append(dict(shell=shellargs, delegate_to='127.0.0.1'))
  
 -            task = dict(file=dict(path='/tmp/console.html', state='absent'))
+-            tasks.append(task)
+-
+-            task = dict(zuul_console=dict(path='/tmp/console.html',
+-                                          port=19885))
 +            task = dict(file=dict(path=console_path, state='absent'))
              tasks.append(task)
  
--            task = dict(zuul_console=dict(path='/tmp/console.html',
--                                          port=19885))
-+            task = dict(zuul_console=dict(path=console_path, port=19885))
+             task = dict(file=dict(path=parameters['WORKSPACE'],
+                                   state='directory'))
              tasks.append(task)
  
-             task = dict(file=dict(path=parameters['WORKSPACE'],
-@@ -1314,7 +1318,7 @@ class NodeWorker(object):
++            task = dict(zuul_console=dict(path=console_path, port=19885))
++            tasks.append(task)
++
+             msg = [
                  "Launched by %s" % self.manager_name,
                  "Building remotely on %s in workspace %s" % (
                      self.name, parameters['WORKSPACE'])]
