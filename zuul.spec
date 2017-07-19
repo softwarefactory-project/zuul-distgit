@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        15.20170407.1713ee6%{?dist}
+Release:        16.20170407.1713ee6%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -218,6 +218,9 @@ exit 0
 
 
 %changelog
+* Wed Jul 19 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-16
+- Fix zuul_console starting and remove PrivateTmp from zuul-launcher
+
 * Mon Jul 17 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-15
 - Add jenkins url fix
 
