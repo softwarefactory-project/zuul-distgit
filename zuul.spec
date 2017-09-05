@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        16.20170407.1713ee6%{?dist}
+Release:        17.20170407.1713ee6%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -83,6 +83,7 @@ The Zuul web interface
 %package server
 Summary: The Zuul server
 Requires: zuul
+Requires: wait4service
 
 %description server
 The Zuul server
@@ -218,6 +219,9 @@ exit 0
 
 
 %changelog
+* Tue Sep 05 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-17
+- Improve server and launcher restart
+
 * Wed Jul 19 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-16
 - Fix zuul_console starting and remove PrivateTmp from zuul-launcher
 
