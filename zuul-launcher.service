@@ -9,6 +9,7 @@ Group=zuul
 EnvironmentFile=-/etc/sysconfig/zuul
 ExecStart=/usr/bin/zuul-launcher -d
 ExecReload=/usr/bin/zuul-launcher reconfigure
+ExecStop=/usr/bin/zuul-launcher release ; /bin/sleep 5 ; /bin/kill -SIGKILL ${MAINPID}
 
 [Install]
 WantedBy=multi-user.target

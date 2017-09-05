@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        16.20170407.1713ee6%{?dist}
+Release:        17.20170407.1713ee6%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -83,6 +83,7 @@ The Zuul web interface
 %package server
 Summary: The Zuul server
 Requires: zuul
+Requires: wait4service
 
 %description server
 The Zuul server
@@ -143,6 +144,7 @@ install -p -D -m 0644 %{SOURCE20} %{buildroot}%{_sysconfdir}/sysconfig/zuul
 install -p -d -m 0700 %{buildroot}%{_sharedstatedir}/zuul
 install -p -d -m 0700 %{buildroot}%{_var}/log/zuul
 install -p -d -m 0700 %{buildroot}%{_sharedstatedir}/zuul/jobs
+install -p -d -m 0755 %{buildroot}%{_sharedstatedir}/zuul/git
 install -p -d -m 0755 %{buildroot}%{_sysconfdir}/zuul/jobs
 
 install -p -D -m 0644 build/web-assets/zuul.app.min.js %{buildroot}/usr/share/javascript/zuul/js/zuul.app.min.js
@@ -207,6 +209,7 @@ exit 0
 %files merger
 %{_bindir}/zuul-merger
 %{_unitdir}/zuul-merger.service
+%dir %attr(0755, zuul, zuul) %{_sharedstatedir}/zuul/git
 
 %files launcher
 %{_bindir}/zuul-launcher
@@ -218,6 +221,9 @@ exit 0
 
 
 %changelog
+* Tue Sep 05 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-17
+- Improve server and launcher restart
+
 * Wed Jul 19 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-16
 - Fix zuul_console starting and remove PrivateTmp from zuul-launcher
 
