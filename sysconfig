@@ -1,2 +1,3 @@
+GEARMAN_PORT=4730
 #STATSD_HOST=statsd.example.com
 #STATSD_PORT=8125
