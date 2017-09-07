@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        17.20170407.1713ee6%{?dist}
+Release:        18.20170407.1713ee6%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -34,6 +34,7 @@ Patch15:        0001-connections-only-configure-sql-on-the-server.patch
 Patch16:        0001-Ensure-build.start_time-is-defined.patch
 # final jenkins fix
 Patch18:        0001-model-keep-jenkins-url-as-is.patch
+Patch19:        0001-launcher-add-cancel-job-function.patch
 
 BuildArch:      noarch
 
@@ -219,6 +220,9 @@ exit 0
 
 
 %changelog
+* Thu Sep 07 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-18
+- Add job cancel action
+
 * Tue Sep 05 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-17
 - Improve server and launcher restart
 
