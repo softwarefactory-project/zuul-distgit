@@ -1,8 +1,8 @@
-%global commit  1713ee675ce17847bbe5e6e28aed23a0ef84093b
+%global commit  5c2735946ab5cd9fbe10b76cda4dbd549b79b9d7
 
 Name:           zuul
 Version:        2.5.1
-Release:        17.20170407.1713ee6%{?dist}
+Release:        18.20170920.5c273594%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -221,6 +221,9 @@ exit 0
 
 
 %changelog
+* Wed Sep 20 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-18
+- Bump upstream reference to include gerrit 2.13 fix
+
 * Tue Sep 05 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-17
 - Improve server and launcher restart
 
