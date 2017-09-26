@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        18.20170920.5c273594%{?dist}
+Release:        19.20170920.5c273594%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -16,7 +16,7 @@ Source20:       sysconfig
 Patch0:         0001-Read-all-Gerrit-events-from-poll-interruption.patch
 Patch1:         0001-Keep-existing-loggers-with-fileConfig.patch
 Patch2:         0001-zuul-tmp-url-key.patch
-Patch3:         Fix-Third-party-CI-conflict.patch
+Patch3:         0001-Fix-Third-Party-CI-Conflict.patch
 Patch4:         0001-Find-fallback-branch-in-zuul-cloner.patch
 Patch5:         0001-Don-t-getChange-on-source-not-triggering-a-change.patch
 # Zuul-launcher fixup
@@ -34,6 +34,8 @@ Patch15:        0001-connections-only-configure-sql-on-the-server.patch
 Patch16:        0001-Ensure-build.start_time-is-defined.patch
 # final jenkins fix
 Patch18:        0001-model-keep-jenkins-url-as-is.patch
+# Gerrit 2.13 fix
+Patch19:        0001-Case-sensitive-label-matching.patch
 
 BuildArch:      noarch
 
@@ -221,6 +223,9 @@ exit 0
 
 
 %changelog
+* Tue Sep 26 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-19
+- Add Case sensitive label matching patch
+
 * Wed Sep 20 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-18
 - Bump upstream reference to include gerrit 2.13 fix
 

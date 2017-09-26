@@ -1,0 +1,654 @@
+From 292b22af6fc5fd42979e78440c5854df42ad73b1 Mon Sep 17 00:00:00 2001
+From: Tobias Henkel <tobias.henkel@bmw-carit.de>
+Date: Wed, 12 Jul 2017 10:51:43 +0200
+Subject: [PATCH] Case sensitive label matching
+
+After upgrading Gerrit to 2.13 our gate stopped working. The reason
+for this is that after a successful gate run zuul does something like
+'gerrit review --label verified=2 --submit'. The verified label in
+Gerrit by default is configured as 'Verified'. The newer version of
+gerrit behaves different now. It accepts the +2 vote on verified but
+doesn't submit the patch anymore if the casing is not correct. This
+forces us to specify the label in the same casing as gerrit
+expects. In that case the tolower() in canMerge prevents the patch
+from entering the gate.
+
+In order to avoid confusion and be consistent, avoid any case
+conversions and use the labels exactly as defined in Gerrit.
+
+Note that this patch requires changes to the pipelines such that the
+labels are spelled exactly as defined in Gerrit.
+
+This is a backport of I9713a075e07b268e4f2620c0862c128158283c7c to
+master.
+
+Change-Id: I55e6f12969c1c920a5017382523e71e12bc7ac3c
+---
+ NEWS.rst                                           |  5 ++++
+ tests/base.py                                      | 26 ++++++++++++++-----
+ tests/fixtures/layout-cloner.yaml                  | 12 ++++-----
+ tests/fixtures/layout-delayed-repo-init.yaml       | 12 ++++-----
+ tests/fixtures/layout-footer-message.yaml          |  8 +++---
+ .../layout-live-reconfiguration-functions.yaml     |  8 +++---
+ tests/fixtures/layout-merge-failure.yaml           | 14 +++++-----
+ tests/fixtures/layout-rate-limit.yaml              |  6 ++---
+ tests/fixtures/layout-repo-deleted.yaml            | 12 ++++-----
+ tests/fixtures/layout-swift.yaml                   | 12 ++++-----
+ tests/fixtures/layout-zuultrigger-enqueued.yaml    | 16 ++++++------
+ tests/fixtures/layout-zuultrigger-merged.yaml      | 14 +++++-----
+ tests/fixtures/layout.yaml                         | 30 +++++++++++-----------
+ tests/test_connection.py                           |  4 +--
+ zuul/model.py                                      |  8 +++---
+ zuul/source/gerrit.py                              |  2 +-
+ 16 files changed, 105 insertions(+), 84 deletions(-)
+
+diff --git a/NEWS.rst b/NEWS.rst
+index 5fef40af..28a6ec26 100644
+--- a/NEWS.rst
++++ b/NEWS.rst
+@@ -12,6 +12,11 @@ Since 2.0.0:
+   the Zuul server in smaller deployments.  Several configuration
+   options have moved from the ``zuul`` section to ``merger``.
+ 
++* Gerrit label names must now be listed in your layout.yaml exactly as
++  they appear in Gerrit. This means case and special characters must
++  match. This change was made to accomodate Gerrit 2.13 which needs the
++  strings to match for changes to be successfully submitted.
++
+ Since 1.3.0:
+ 
+ * The Jenkins launcher is replaced with Gearman launcher.  An internal
+diff --git a/tests/base.py b/tests/base.py
+index 6ae0222e..d1a214b2 100755
+--- a/tests/base.py
++++ b/tests/base.py
+@@ -103,9 +103,22 @@ class ChangeReference(git.Reference):
+ 
+ 
+ class FakeChange(object):
+-    categories = {'APRV': ('Approved', -1, 1),
+-                  'CRVW': ('Code-Review', -2, 2),
+-                  'VRFY': ('Verified', -2, 2)}
++    categories = {'Approved': ('Approved', -1, 1),
++                  'Code-Review': ('Code-Review', -2, 2),
++                  'Verified': ('Verified', -2, 2)}
++
++    # TODO(tobiash): This is used as a translation layer between the tests
++    #                which use lower case labels. This can be removed if all
++    #                tests are converted to use the correct casing.
++    categories_translation = {'approved': 'Approved',
++                              'code-review': 'Code-Review',
++                              'verified': 'Verified',
++                              'Approved': 'Approved',
++                              'Code-Review': 'Code-Review',
++                              'Verified': 'Verified',
++                              'CRVW': 'Code-Review',
++                              'APRV': 'Approved',
++                              'VRFY': 'Verified'}
+ 
+     def __init__(self, gerrit, number, project, branch, subject,
+                  status='NEW', upstream_root=None):
+@@ -290,8 +303,8 @@ class FakeChange(object):
+         if not granted_on:
+             granted_on = time.time()
+         approval = {
+-            'description': self.categories[category][0],
+-            'type': category,
++            'description': self.categories_translation[category],
++            'type': self.categories_translation[category],
+             'value': str(value),
+             'by': {
+                 'username': username,
+@@ -300,7 +313,8 @@ class FakeChange(object):
+             'grantedOn': int(granted_on)
+         }
+         for i, x in enumerate(self.patchsets[-1]['approvals'][:]):
+-            if x['by']['username'] == username and x['type'] == category:
++            if x['by']['username'] == username and \
++                    x['type'] == self.categories_translation[category]:
+                 del self.patchsets[-1]['approvals'][i]
+         self.patchsets[-1]['approvals'].append(approval)
+         event = {'approvals': [approval],
+diff --git a/tests/fixtures/layout-cloner.yaml b/tests/fixtures/layout-cloner.yaml
+index e8b5dde0..0d511292 100644
+--- a/tests/fixtures/layout-cloner.yaml
++++ b/tests/fixtures/layout-cloner.yaml
+@@ -6,10 +6,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: gate
+     manager: DependentPipelineManager
+@@ -18,17 +18,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+ 
+   - name: post
+     manager: IndependentPipelineManager
+diff --git a/tests/fixtures/layout-delayed-repo-init.yaml b/tests/fixtures/layout-delayed-repo-init.yaml
+index 6caf6222..04dc010a 100644
+--- a/tests/fixtures/layout-delayed-repo-init.yaml
++++ b/tests/fixtures/layout-delayed-repo-init.yaml
+@@ -6,10 +6,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: post
+     manager: IndependentPipelineManager
+@@ -25,17 +25,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ projects:
+diff --git a/tests/fixtures/layout-footer-message.yaml b/tests/fixtures/layout-footer-message.yaml
+index 7977c19b..fb7c95e7 100644
+--- a/tests/fixtures/layout-footer-message.yaml
++++ b/tests/fixtures/layout-footer-message.yaml
+@@ -10,21 +10,21 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+       smtp:
+         to: success@example.org
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+       smtp:
+         to: failure@example.org
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ projects:
+diff --git a/tests/fixtures/layout-live-reconfiguration-functions.yaml b/tests/fixtures/layout-live-reconfiguration-functions.yaml
+index e261a884..695239f0 100644
+--- a/tests/fixtures/layout-live-reconfiguration-functions.yaml
++++ b/tests/fixtures/layout-live-reconfiguration-functions.yaml
+@@ -9,17 +9,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ jobs:
+diff --git a/tests/fixtures/layout-merge-failure.yaml b/tests/fixtures/layout-merge-failure.yaml
+index 72bc9c9c..9550466f 100644
+--- a/tests/fixtures/layout-merge-failure.yaml
++++ b/tests/fixtures/layout-merge-failure.yaml
+@@ -6,10 +6,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: post
+     manager: IndependentPipelineManager
+@@ -26,22 +26,22 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     merge-failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+       smtp:
+         to: you@example.com
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ projects:
+diff --git a/tests/fixtures/layout-rate-limit.yaml b/tests/fixtures/layout-rate-limit.yaml
+index 9f6748c9..48d39320 100644
+--- a/tests/fixtures/layout-rate-limit.yaml
++++ b/tests/fixtures/layout-rate-limit.yaml
+@@ -6,13 +6,13 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+diff --git a/tests/fixtures/layout-repo-deleted.yaml b/tests/fixtures/layout-repo-deleted.yaml
+index 967009a2..10168be5 100644
+--- a/tests/fixtures/layout-repo-deleted.yaml
++++ b/tests/fixtures/layout-repo-deleted.yaml
+@@ -6,10 +6,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: post
+     manager: IndependentPipelineManager
+@@ -25,17 +25,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ projects:
+diff --git a/tests/fixtures/layout-swift.yaml b/tests/fixtures/layout-swift.yaml
+index acaaad8d..2af5b244 100644
+--- a/tests/fixtures/layout-swift.yaml
++++ b/tests/fixtures/layout-swift.yaml
+@@ -6,10 +6,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: post
+     manager: IndependentPipelineManager
+@@ -25,17 +25,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ jobs:
+diff --git a/tests/fixtures/layout-zuultrigger-enqueued.yaml b/tests/fixtures/layout-zuultrigger-enqueued.yaml
+index 8babd9e7..e052ec92 100644
+--- a/tests/fixtures/layout-zuultrigger-enqueued.yaml
++++ b/tests/fixtures/layout-zuultrigger-enqueued.yaml
+@@ -4,7 +4,7 @@ pipelines:
+     source: gerrit
+     require:
+       approval:
+-        - verified: -1
++        - Verified: -1
+     trigger:
+       gerrit:
+         - event: patchset-created
+@@ -13,10 +13,10 @@ pipelines:
+           pipeline: gate
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: gate
+     manager: DependentPipelineManager
+@@ -24,25 +24,25 @@ pipelines:
+     source: gerrit
+     require:
+       approval:
+-        - verified: 1
++        - Verified: 1
+     trigger:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+       zuul:
+         - event: parent-change-enqueued
+           pipeline: gate
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+ projects:
+diff --git a/tests/fixtures/layout-zuultrigger-merged.yaml b/tests/fixtures/layout-zuultrigger-merged.yaml
+index bb06ddef..90fa579b 100644
+--- a/tests/fixtures/layout-zuultrigger-merged.yaml
++++ b/tests/fixtures/layout-zuultrigger-merged.yaml
+@@ -7,10 +7,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: gate
+     manager: DependentPipelineManager
+@@ -20,17 +20,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+   - name: merge-check
+@@ -42,7 +42,7 @@ pipelines:
+         - event: project-change-merged
+     merge-failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+ projects:
+   - name: org/project
+diff --git a/tests/fixtures/layout.yaml b/tests/fixtures/layout.yaml
+index 2e48ff1d..ba9d09ff 100644
+--- a/tests/fixtures/layout.yaml
++++ b/tests/fixtures/layout.yaml
+@@ -9,10 +9,10 @@ pipelines:
+         - event: patchset-created
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: post
+     manager: IndependentPipelineManager
+@@ -28,17 +28,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+     precedence: high
+ 
+   - name: unused
+@@ -48,7 +48,7 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+ 
+   - name: dup1
+     manager: IndependentPipelineManager
+@@ -57,10 +57,10 @@ pipelines:
+         - event: change-restored
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: dup2
+     manager: IndependentPipelineManager
+@@ -69,10 +69,10 @@ pipelines:
+         - event: change-restored
+     success:
+       gerrit:
+-        verified: 1
++        Verified: 1
+     failure:
+       gerrit:
+-        verified: -1
++        Verified: -1
+ 
+   - name: conflict
+     manager: DependentPipelineManager
+@@ -81,17 +81,17 @@ pipelines:
+       gerrit:
+         - event: comment-added
+           approval:
+-            - approved: 1
++            - Approved: 1
+     success:
+       gerrit:
+-        verified: 2
++        Verified: 2
+         submit: true
+     failure:
+       gerrit:
+-        verified: -2
++        Verified: -2
+     start:
+       gerrit:
+-        verified: 0
++        Verified: 0
+ 
+   - name: experimental
+     manager: IndependentPipelineManager
+diff --git a/tests/test_connection.py b/tests/test_connection.py
+index f9f54f38..eb69b272 100644
+--- a/tests/test_connection.py
++++ b/tests/test_connection.py
+@@ -60,7 +60,7 @@ class TestConnections(ZuulDBTestCase):
+         self.waitUntilSettled()
+ 
+         self.assertEqual(len(A.patchsets[-1]['approvals']), 1)
+-        self.assertEqual(A.patchsets[-1]['approvals'][0]['type'], 'VRFY')
++        self.assertEqual(A.patchsets[-1]['approvals'][0]['type'], 'Verified')
+         self.assertEqual(A.patchsets[-1]['approvals'][0]['value'], '1')
+         self.assertEqual(A.patchsets[-1]['approvals'][0]['by']['username'],
+                          'jenkins')
+@@ -72,7 +72,7 @@ class TestConnections(ZuulDBTestCase):
+         self.waitUntilSettled()
+ 
+         self.assertEqual(len(B.patchsets[-1]['approvals']), 1)
+-        self.assertEqual(B.patchsets[-1]['approvals'][0]['type'], 'VRFY')
++        self.assertEqual(B.patchsets[-1]['approvals'][0]['type'], 'Verified')
+         self.assertEqual(B.patchsets[-1]['approvals'][0]['value'], '-1')
+         self.assertEqual(B.patchsets[-1]['approvals'][0]['by']['username'],
+                          'civoter')
+diff --git a/zuul/model.py b/zuul/model.py
+index 40f46945..ceff6844 100644
+--- a/zuul/model.py
++++ b/zuul/model.py
+@@ -1127,7 +1127,8 @@ class BaseFilter(object):
+             else:
+                 if not isinstance(v, list):
+                     v = [v]
+-                if (normalizeCategory(approval['description']) != k or
++                if (normalizeCategory(approval['description']) !=
++                        normalizeCategory(k) or
+                         int(approval['value']) not in v):
+                     return False
+         return True
+@@ -1307,8 +1308,9 @@ class EventFilter(BaseFilter):
+         for category, value in self.event_approvals.items():
+             matches_approval = False
+             for eapproval in event.approvals:
+-                if (normalizeCategory(eapproval['description']) == category and
+-                    int(eapproval['value']) == int(value)):
++                if (normalizeCategory(eapproval['description']) ==
++                        normalizeCategory(category) and
++                        int(eapproval['value']) == int(value)):
+                     matches_approval = True
+             if not matches_approval:
+                 return False
+diff --git a/zuul/source/gerrit.py b/zuul/source/gerrit.py
+index fa495056..b4eba542 100644
+--- a/zuul/source/gerrit.py
++++ b/zuul/source/gerrit.py
+@@ -125,7 +125,7 @@ class GerritSource(BaseSource):
+                             continue
+                         elif label['status'] in ['NEED', 'REJECT']:
+                             # It may be our own rejection, so we ignore
+-                            if label['label'].lower() not in allow_needs:
++                            if label['label'] not in allow_needs:
+                                 return False
+                             continue
+                         else:
+-- 
+2.13.0
+
