@@ -1,0 +1,24 @@
+From 948c3c0705b4aa4b2578621cf13d4695b523c372 Mon Sep 17 00:00:00 2001
+From: SF initial configurator <admin@sftests.com>
+Date: Thu, 26 Oct 2017 14:14:01 +0000
+Subject: [PATCH] Use inventory instead of hostfile (ansible 2.4 deprecation)
+
+---
+ zuul/launcher/ansiblelaunchserver.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
+index 9a65da9..92c0c09 100644
+--- a/zuul/launcher/ansiblelaunchserver.py
++++ b/zuul/launcher/ansiblelaunchserver.py
+@@ -1373,6 +1373,7 @@ class NodeWorker(object):
+         with open(fn, 'w') as config:
+             config.write('[defaults]\n')
+             config.write('hostfile = %s\n' % jobdir.inventory)
++            config.write('inventory = %s\n' % jobdir.inventory)
+             config.write('local_tmp = %s/.ansible/local_tmp\n' % jobdir.root)
+             config.write('remote_tmp = %s/.ansible/remote_tmp\n' % jobdir.root)
+             config.write('private_key_file = %s\n' % self.private_key_file)
+-- 
+1.8.3.1
+

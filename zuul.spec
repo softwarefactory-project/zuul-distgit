@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        19.20170920.5c273594%{?dist}
+Release:        20.20170920.5c273594%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -36,6 +36,8 @@ Patch16:        0001-Ensure-build.start_time-is-defined.patch
 Patch18:        0001-model-keep-jenkins-url-as-is.patch
 # Gerrit 2.13 fix
 Patch19:        0001-Case-sensitive-label-matching.patch
+# Ansible 2.4.0 fix
+Patch20:        0008-Use-inventory-instead-of-hostfile-ansible-2.4-deprec.patch
 
 BuildArch:      noarch
 
@@ -223,6 +225,9 @@ exit 0
 
 
 %changelog
+* Thu Oct 26 2017 Fabien Boucher <fboucher@redhat.com> - 2.5.1-20
+- Add deprecated hostfile to inventory patch
+
 * Tue Sep 26 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-19
 - Add Case sensitive label matching patch
 
