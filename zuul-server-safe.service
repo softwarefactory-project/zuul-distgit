@@ -1,0 +1,17 @@
+[Unit]
+Description=Zuul Server Service (Safe Restart)
+After=network.target
+
+[Service]
+Type=simple
+User=zuul
+Group=zuul
+EnvironmentFile=-/etc/sysconfig/zuul
+ExecStartPre=/usr/share/sf-config/scripts/zuul-changes.py dump
+ExecStartPost=/usr/share/sf-config/scripts/zuul-changes.py load
+ExecStart=/usr/bin/zuul-server -d
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStartPost=/usr/bin/wait4service localhost $GEARMAN_PORT
+
+[Install]
+WantedBy=multi-user.target
