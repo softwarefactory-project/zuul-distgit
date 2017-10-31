@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        20.20170920.5c273594%{?dist}
+Release:        21.20170920.5c273594%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -11,6 +11,7 @@ Source0:        https://github.com/openstack-infra/zuul/archive/%{commit}.tar.gz
 Source1:        zuul-server.service
 Source2:        zuul-merger.service
 Source3:        zuul-launcher.service
+Source10:       zuul-server-safe-restart
 Source20:       sysconfig
 
 Patch0:         0001-Read-all-Gerrit-events-from-poll-interruption.patch
@@ -141,6 +142,7 @@ PBR_VERSION=%{version} %{__python2} setup.py install --skip-build --root %{build
 install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/zuul-server.service
 install -p -D -m 0644 %{SOURCE2} %{buildroot}%{_unitdir}/zuul-merger.service
 install -p -D -m 0644 %{SOURCE3} %{buildroot}%{_unitdir}/zuul-launcher.service
+install -p -D -m 0755 %{SOURCE10} %{buildroot}%{_bindir}/zuul-server-safe-restart
 install -p -D -m 0644 etc/layout.yaml-sample %{buildroot}%{_sysconfdir}/zuul/layout.yaml
 install -p -D -m 0644 etc/logging.conf-sample %{buildroot}%{_sysconfdir}/zuul/logging.conf
 install -p -D -m 0640 etc/zuul.conf-sample %{buildroot}%{_sysconfdir}/zuul/zuul.conf
@@ -209,6 +211,7 @@ exit 0
 %files server
 %{_bindir}/zuul-server
 %{_unitdir}/zuul-server.service
+%{_bindir}/zuul-server-safe-restart
 
 %files merger
 %{_bindir}/zuul-merger
@@ -225,6 +228,9 @@ exit 0
 
 
 %changelog
+* Tue Oct 31 2017 Haïkel Guémar <hguemar@fedoraproject.org> - 2.5.1-21
+- Add zuul-server-safe-restart script
+
 * Thu Oct 26 2017 Fabien Boucher <fboucher@redhat.com> - 2.5.1-20
 - Add deprecated hostfile to inventory patch
 

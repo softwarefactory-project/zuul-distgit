@@ -1,0 +1,28 @@
+#! /bin/bash
+#
+# Allows safe restart without losing builds-in-progress jobs
+
+set -x
+
+DUMP_JOBS_CMD="/usr/share/sf-config/scripts/zuul-changes.py dump"
+LOAD_JOBS_CMD="/usr/share/sf-config/scripts/zuul-changes.py load"
+
+
+die() {
+    echo "$@" 1>&2
+    exit 1
+}
+
+root_is_required() {
+    [[ "$(id -u)" == 0 ]] || die "$0 requires root access for this action"
+}
+
+root_is_required
+
+# dump jobs
+$DUMP_JOBS_CMD
+# restart zuul
+systemctl restart zuul-server
+# load jobs
+$DUMP_JOBS_CMD
+
