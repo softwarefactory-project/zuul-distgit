@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        20.20170920.5c273594%{?dist}
+Release:        21.20170920.5c273594%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -38,6 +38,8 @@ Patch18:        0001-model-keep-jenkins-url-as-is.patch
 Patch19:        0001-Case-sensitive-label-matching.patch
 # Ansible 2.4.0 fix
 Patch20:        0008-Use-inventory-instead-of-hostfile-ansible-2.4-deprec.patch
+# Avoid potential offending key that can stuck the config-update
+Patch21:        0009-Set-UserKnownHostsFile-to-dev-null.patch
 
 BuildArch:      noarch
 
@@ -225,6 +227,9 @@ exit 0
 
 
 %changelog
+* Thu Nov 09 2017 Fabien Boucher <fboucher@redhat.com> - 2.5.1-21
+- Avoid potential offending key 
+
 * Thu Oct 26 2017 Fabien Boucher <fboucher@redhat.com> - 2.5.1-20
 - Add deprecated hostfile to inventory patch
 

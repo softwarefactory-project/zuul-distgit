@@ -1,0 +1,29 @@
+From 66d8c935f9931f0210de60d3032f53eeabf2322c Mon Sep 17 00:00:00 2001
+From: SF initial configurator <admin@sftests.com>
+Date: Thu, 9 Nov 2017 10:05:11 +0000
+Subject: [PATCH] Set UserKnownHostsFile to /dev/null
+
+The SCP task of the launcher already ignore the host key
+of the remote end. So it does not make sense to append the remote
+host key in the user .ssh/known_host file. This patch adds the
+ssh option to the rsync command line.
+---
+ zuul/launcher/ansiblelaunchserver.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/zuul/launcher/ansiblelaunchserver.py b/zuul/launcher/ansiblelaunchserver.py
+index 43ec98e..ce959cc 100644
+--- a/zuul/launcher/ansiblelaunchserver.py
++++ b/zuul/launcher/ansiblelaunchserver.py
+@@ -1070,7 +1070,7 @@ class NodeWorker(object):
+             '--compress', '-rt', '--safe-links',
+             '--rsync-path="mkdir -p {dest} && rsync"',
+             '--rsh="/usr/bin/ssh -i {private_key_file} -S none '
+-            '-o StrictHostKeyChecking=no -q"',
++            '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -q"',
+             '--out-format="<<CHANGED>>%i %n%L"',
+             '{source}', '"{user}@{host}:{dest}"'
+         ]
+-- 
+1.8.3.1
+
