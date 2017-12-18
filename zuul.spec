@@ -2,7 +2,7 @@
 
 Name:           zuul
 Version:        2.5.1
-Release:        21.20170920.5c273594%{?dist}
+Release:        22.20170920.5c273594%{?dist}
 Summary:        Trunk Gating System
 
 License:        ASL 2.0
@@ -47,7 +47,7 @@ Requires:       python-pbr
 Requires:       PyYAML
 Requires:       python-paste
 Requires:       python-webob
-Requires:       python2-paramiko
+Requires:       python-paramiko
 Requires:       GitPython
 Requires:       python-ordereddict
 Requires:       python-daemon
@@ -227,6 +227,9 @@ exit 0
 
 
 %changelog
+* Mon Dec 18 2017 Tristan Cacqueray <tdecacqu@redhat.com> - 2.5.1-22
+- Switch requirement to python-paramiko instead of python2-paramiko
+
 * Thu Nov 09 2017 Fabien Boucher <fboucher@redhat.com> - 2.5.1-21
 - Avoid potential offending key 
 
